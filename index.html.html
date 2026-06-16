@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>속초 부동산</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f9fafb; color: #111827; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  h1 { font-size: 20px; font-weight: 500; }
+  .sub { font-size: 13px; color: #9ca3af; margin-top: 3px; }
+  .search-row { display: flex; gap: 10px; margin: 1.2rem 0 1rem; }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap span { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+  input[type=text] { width: 100%; padding: 8px 12px 8px 32px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filter-btn { padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1px solid #e5e7eb; background: transparent; color: #6b7280; }
+  .filter-btn.active { background: #1D4ED8; color: #fff; border-color: #1D4ED8; font-weight: 500; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: #fff; border: 0.5px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; cursor: pointer; transition: border-color 0.15s; }
+  .card:hover { border-color: #93C5FD; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .card-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .card-addr { font-size: 12px; color: #9ca3af; }
+  .card-icon { font-size: 28px; }
+  .area-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .area-tag { font-size: 11px; background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; border-radius: 4px; padding: 2px 7px; }
+  .price-row { display: flex; flex-direction: column; gap: 3px; }
+  .price-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .price-type { font-size: 11px; font-weight: 600; min-width: 24px; }
+  .card-bottom { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid #f3f4f6; display: flex; gap: 8px; align-items: center; }
+  .deal-cnt { font-size: 11px; }
+  .more-btn { margin-left: auto; font-size: 11px; color: #3B82F6; font-weight: 500; }
+  .stat-box { margin-top: 1.5rem; padding: 1rem; background: #f3f4f6; border-radius: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .stat-item p:first-child { font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
+  .stat-item p:last-child { font-size: 13px; font-weight: 500; color: #374151; }
+  .empty { text-align: center; padding: 3rem; color: #9ca3af; font-size: 14px; }
+
+  /* 상세 페이지 */
+  .detail { display: none; }
+  .back-btn { background: none; border: none; cursor: pointer; color: #3B82F6; font-size: 14px; padding: 1rem 0; display: flex; align-items: center; gap: 4px; }
+  .detail-card { background: #fff; border: 0.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .gallery { height: 160px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; font-size: 13px; color: #374151; font-weight: 500; }
+  .thumb-row { display: flex; gap: 6px; padding: 0 1.25rem 0; }
+  .thumb { flex: 1; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; padding: 6px 2px; cursor: pointer; font-size: 18px; text-align: center; }
+  .thumb.active { border: 2px solid #3B82F6; background: #EFF6FF; }
+  .detail-info { padding: 1rem 1.25rem; }
+  .detail-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .detail-name { font-size: 18px; font-weight: 500; margin: 6px 0 2px; }
+  .detail-addr { font-size: 13px; color: #6b7280; }
+  .detail-price-label { font-size: 13px; color: #9ca3af; text-align: right; }
+  .detail-price-val { font-size: 18px; font-weight: 500; text-align: right; margin-top: 2px; }
+  .detail-desc { font-size: 13px; color: #6b7280; line-height: 1.6; margin-bottom: 12px; }
+  .meta-row { display: flex; gap: 16px; }
+  .meta-item p:first-child { font-size: 10px; color: #9ca3af; }
+  .meta-item p:last-child { font-size: 12px; font-weight: 500; color: #374151; margin-top: 2px; }
+  .chart-box { background: #fff; border: 0.5px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 16px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .chart-title { font-size: 15px; font-weight: 500; }
+  .chart-diff { font-size: 12px; font-weight: 500; }
+  .chart-stats { display: flex; gap: 12px; margin-top: 10px; }
+  .chart-stat { flex: 1; background: #f9fafb; border-radius: 8px; padding: 8px 12px; }
+  .chart-stat p:first-child { font-size: 10px; color: #9ca3af; }
+  .chart-stat p:last-child { font-size: 14px; font-weight: 500; margin-top: 2px; }
+  .deals-box { background: #fff; border: 0.5px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; }
+  .deals-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+  .tab-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab-btn { padding: 5px 14px; border-radius: 20px; border: 1px solid #e5e7eb; background: transparent; color: #6b7280; font-size: 12px; cursor: pointer; }
+  .tab-btn.active { background: #3B82F6; color: #fff; border-color: #3B82F6; font-weight: 500; }
+  .deal-list { display: flex; flex-direction: column; gap: 6px; }
+  .deal-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f9fafb; border-radius: 8px; border: 0.5px solid #f3f4f6; }
+  .deal-left { display: flex; align-items: center; gap: 8px; }
+  .deal-tag { font-size: 11px; border-radius: 4px; padding: 1px 6px; }
+  .deal-size { font-size: 13px; color: #374151; }
+  .deal-price { font-size: 13px; font-weight: 500; }
+  .deal-date { font-size: 11px; color: #9ca3af; margin-top: 1px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- 목록 -->
+  <div id="list-page">
+    <div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <h1>속초 부동산</h1>
+        <span style="font-size:13px;color:#9ca3af">실시간 매물 6건</span>
+      </div>
+      <p class="sub">강원특별자치도 속초시 · 오늘 기준 시세</p>
+    </div>
+    <div class="search-row">
+      <div class="search-wrap">
+        <span>🔍</span>
+        <input type="text" id="search-input" placeholder="단지명 또는 주소 검색" oninput="renderList()">
+      </div>
+    </div>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="grid" id="card-grid"></div>
+    <div class="empty" id="empty" style="display:none">🔍 검색 결과가 없습니다</div>
+    <div class="stat-box">
+      <div class="stat-item"><p>총 매물</p><p>6건</p></div>
+      <div class="stat-item"><p>평균 매매가</p><p>4억 2천</p></div>
+      <div class="stat-item"><p>평균 전세가</p><p>2억 4천</p></div>
+      <div class="stat-item"><p>업데이트</p><p>오늘 09:00</p></div>
+    </div>
+  </div>
+
+  <!-- 상세 -->
+  <div id="detail-page" class="detail"></div>
+</div>
+
+<script>
+const LISTINGS = [
+  {
+    id:1, name:"속초 청호 아이파크", address:"속초시 청호동 15-2", type:"아파트",
+    area:"84㎡", floor:"12층/20층", price:"4억 2,000", priceType:"매매",
+    tag:"매매", built:"2019", units:480, img:"🏢",
+    desc:"동해 조망 프리미엄 아파트. 속초시청 도보 10분, 속초해변 차량 5분.",
+    priceHistory:[
+      {month:"24.01",price:38000},{month:"24.03",price:39000},{month:"24.05",price:40000},
+      {month:"24.07",price:41500},{month:"24.09",price:42000},{month:"24.11",price:42000},
+      {month:"25.01",price:43000},{month:"25.03",price:42000}
+    ],
+    deals:[
+      {type:"매매",size:"84㎡",floor:"12층",price:"4억 2,000만",date:"2025.05"},
+      {type:"매매",size:"84㎡",floor:"7층",price:"4억 500만",date:"2025.04"},
+      {type:"전세",size:"84㎡",floor:"15층",price:"2억 8,000만",date:"2025.05"},
+      {type:"전세",size:"59㎡",floor:"4층",price:"1억 9,000만",date:"2025.03"},
+      {type:"월세",size:"59㎡",floor:"8층",price:"보500/월90",date:"2025.05"},
+      {type:"월세",size:"84㎡",floor:"3층",price:"보1000/월130",date:"2025.04"}
+    ],
+    photos:["🌊 동해 조망","🏠 거실 (34평)","🍳 주방/식당","🛁 욕실","🅿️ 지하주차장"]
+  },
+  {
+    id:2, name:"속초 대우 푸르지오", address:"속초시 조양동 210-3", type:"아파트",
+    area:"59㎡", floor:"5층/15층", price:"1억 8,000", priceType:"전세",
+    tag:"전세", built:"2015", units:320, img:"🏗️",
+    desc:"속초 시내 중심부 위치. 고속버스터미널 도보 5분, 홈플러스 인접.",
+    priceHistory:[
+      {month:"24.01",price:16000},{month:"24.03",price:16500},{month:"24.05",price:17000},
+      {month:"24.07",price:17000},{month:"24.09",price:17500},{month:"24.11",price:18000},
+      {month:"25.01",price:18000},{month:"25.03",price:18500}
+    ],
+    deals:[
+      {type:"매매",size:"59㎡",floor:"9층",price:"2억 8,000만",date:"2025.05"},
+      {type:"매매",size:"84㎡",floor:"5층",price:"3억 5,000만",date:"2025.04"},
+      {type:"전세",size:"59㎡",floor:"5층",price:"1억 8,000만",date:"2025.05"},
+      {type:"전세",size:"59㎡",floor:"11층",price:"1억 7,500만",date:"2025.03"},
+      {type:"월세",size:"59㎡",floor:"2층",price:"보500/월75",date:"2025.05"}
+    ],
+    photos:["🏙️ 단지 전경","🛋️ 거실 (25평)","🍳 주방","🛏️ 안방","🌳 커뮤니티"]
+  },
+  {
+    id:3, name:"설악 e-편한세상", address:"속초시 설악동 88", type:"아파트",
+    area:"101㎡", floor:"8층/25층", price:"보증 1,000 / 월 150", priceType:"월세",
+    tag:"월세", built:"2021", units:650, img:"🏙️",
+    desc:"설악산 조망 프리미엄 단지. 속초 IC 5분, 신축 커뮤니티 시설.",
+    priceHistory:[
+      {month:"24.01",price:51000},{month:"24.03",price:52000},{month:"24.05",price:53000},
+      {month:"24.07",price:55000},{month:"24.09",price:56000},{month:"24.11",price:57000},
+      {month:"25.01",price:57000},{month:"25.03",price:58000}
+    ],
+    deals:[
+      {type:"매매",size:"101㎡",floor:"18층",price:"5억 8,000만",date:"2025.05"},
+      {type:"매매",size:"101㎡",floor:"5층",price:"5억 2,000만",date:"2025.04"},
+      {type:"전세",size:"101㎡",floor:"10층",price:"3억 5,000만",date:"2025.05"},
+      {type:"전세",size:"84㎡",floor:"7층",price:"2억 9,000만",date:"2025.04"},
+      {type:"월세",size:"101㎡",floor:"8층",price:"보1000/월150",date:"2025.05"},
+      {type:"월세",size:"84㎡",floor:"3층",price:"보1000/월120",date:"2025.03"}
+    ],
+    photos:["🏔️ 설악산 조망","🛋️ 거실 (42평)","🍳 아일랜드 주방","🛁 드레스룸","🏊 수영장/GX"]
+  },
+  {
+    id:4, name:"속초 한라 비발디", address:"속초시 노학동 440", type:"아파트",
+    area:"76㎡", floor:"3층/18층", price:"2억 9,000", priceType:"매매",
+    tag:"매매", built:"2010", units:280, img:"🏘️",
+    desc:"속초 학군 우수 지역. 노학초·중 도보 3분, 조용한 주거단지.",
+    priceHistory:[
+      {month:"24.01",price:25000},{month:"24.03",price:26000},{month:"24.05",price:27000},
+      {month:"24.07",price:27500},{month:"24.09",price:28000},{month:"24.11",price:28500},
+      {month:"25.01",price:29000},{month:"25.03",price:29000}
+    ],
+    deals:[
+      {type:"매매",size:"76㎡",floor:"3층",price:"2억 9,000만",date:"2025.05"},
+      {type:"매매",size:"76㎡",floor:"10층",price:"3억 1,000만",date:"2025.04"},
+      {type:"전세",size:"76㎡",floor:"6층",price:"2억 1,000만",date:"2025.05"},
+      {type:"월세",size:"76㎡",floor:"2층",price:"보500/월80",date:"2025.04"}
+    ],
+    photos:["🌿 단지 조경","🛋️ 거실 (32평)","🍳 주방","🛏️ 침실","🏫 단지 놀이터"]
+  },
+  {
+    id:5, name:"청초호 롯데캐슬", address:"속초시 금호동 55-1", type:"아파트",
+    area:"115㎡", floor:"19층/28층", price:"6억 5,000", priceType:"매매",
+    tag:"매매", built:"2023", units:820, img:"🏰",
+    desc:"청초호 레이크뷰 최신 신축. 속초 내 최고급 단지, 스카이라운지 보유.",
+    priceHistory:[
+      {month:"24.01",price:58000},{month:"24.03",price:60000},{month:"24.05",price:62000},
+      {month:"24.07",price:63000},{month:"24.09",price:64000},{month:"24.11",price:65000},
+      {month:"25.01",price:65000},{month:"25.03",price:66000}
+    ],
+    deals:[
+      {type:"매매",size:"115㎡",floor:"19층",price:"6억 5,000만",date:"2025.05"},
+      {type:"매매",size:"115㎡",floor:"24층",price:"7억 2,000만",date:"2025.04"},
+      {type:"전세",size:"115㎡",floor:"12층",price:"4억 2,000만",date:"2025.05"},
+      {type:"전세",size:"84㎡",floor:"8층",price:"3억 1,000만",date:"2025.03"},
+      {type:"월세",size:"84㎡",floor:"5층",price:"보2000/월180",date:"2025.05"}
+    ],
+    photos:["🏖️ 청초호 레이크뷰","🛋️ 거실 (48평)","👨‍🍳 풀옵션 주방","🛁 욕실 2개","🏋️ 피트니스/스파"]
+  },
+  {
+    id:6, name:"속초 중앙 SK뷰", address:"속초시 중앙동 97-3", type:"아파트",
+    area:"59㎡", floor:"6층/12층", price:"보증 500 / 월 65", priceType:"월세",
+    tag:"월세", built:"2008", units:190, img:"🏢",
+    desc:"속초 중심 역세권 단지. 재래시장·대형마트 도보 5분, 구도심 최적 입지.",
+    priceHistory:[
+      {month:"24.01",price:18000},{month:"24.03",price:18500},{month:"24.05",price:19000},
+      {month:"24.07",price:19000},{month:"24.09",price:19500},{month:"24.11",price:20000},
+      {month:"25.01",price:20000},{month:"25.03",price:20500}
+    ],
+    deals:[
+      {type:"매매",size:"59㎡",floor:"9층",price:"2억 500만",date:"2025.04"},
+      {type:"전세",size:"59㎡",floor:"4층",price:"1억 4,000만",date:"2025.04"},
+      {type:"월세",size:"59㎡",floor:"6층",price:"보500/월65",date:"2025.05"},
+      {type:"월세",size:"59㎡",floor:"11층",price:"보500/월70",date:"2025.03"}
+    ],
+    photos:["🏙️ 단지 전경","🛋️ 거실 (25평)","🍳 주방","🛏️ 침실","🌆 야경"]
+  }
+];
+
+const DEAL_COLORS = { "매매":"#1D4ED8", "전세":"#15803D", "월세":"#C2410C" };
+const DEAL_BG = { "매매":"#EFF6FF", "전세":"#F0FDF4", "월세":"#FFF7ED" };
+const DEAL_BORDER = { "매매":"#BFDBFE", "전세":"#BBF7D0", "월세":"#FED7AA" };
+const GALLERY_COLORS = ["#DBEAFE","#D1FAE5","#FEF3C7","#FCE7F3","#E0E7FF"];
+
+let currentFilter = "전체";
+let currentDetailPhotos = [];
+let currentPhotoIdx = 0;
+
+function parsePrice(deal) {
+  if (deal.type === "월세") {
+    const m = deal.price.match(/월(\d+)/);
+    return m ? parseInt(m[1]) : null;
+  }
+  const m = deal.price.match(/([\d,]+)만/);
+  return m ? parseInt(m[1].replace(/,/g,"")) : null;
+}
+
+function fmtWon(val, type) {
+  if (type === "월세") return val + "만원";
+  const uk = Math.floor(val / 10000);
+  const chun = Math.round((val % 10000) / 1000);
+  return chun === 0 ? `${uk}억` : `${uk}억 ${chun}천만원`;
+}
+
+function getPriceRange(deals) {
+  const types = ["매매","전세","월세"];
+  return types.map(t => {
+    const filtered = deals.filter(d => d.type === t);
+    if (!filtered.length) return null;
+    const amounts = filtered.map(d => parsePrice(d)).filter(Boolean);
+    if (!amounts.length) return null;
+    const min = Math.min(...amounts), max = Math.max(...amounts);
+    const label = min === max ? fmtWon(min, t) : `${fmtWon(min, t)} ~ ${fmtWon(max, t)}`;
+    return { type: t, label };
+  }).filter(Boolean);
+}
+
+function getAreas(deals) {
+  return [...new Set(deals.map(d => d.size))].sort();
+}
+
+function renderFilters() {
+  const row = document.getElementById("filter-row");
+  const filters = ["전체","매매","전세","월세"];
+  const counts = { 매매: LISTINGS.filter(l=>l.tag==="매매").length, 전세: LISTINGS.filter(l=>l.tag==="전세").length, 월세: LISTINGS.filter(l=>l.tag==="월세").length };
+  row.innerHTML = filters.map(f => {
+    const cnt = f === "전체" ? LISTINGS.length : counts[f];
+    return `<button class="filter-btn ${currentFilter===f?'active':''}" onclick="setFilter('${f}')">${f} (${cnt})</button>`;
+  }).join("");
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  renderFilters();
+  renderList();
+}
+
+function renderList() {
+  const q = document.getElementById("search-input").value.trim();
+  const filtered = LISTINGS.filter(l =>
+    (currentFilter === "전체" || l.tag === currentFilter) &&
+    (!q || l.name.includes(q) || l.address.includes(q))
+  );
+  const grid = document.getElementById("card-grid");
+  const empty = document.getElementById("empty");
+  if (!filtered.length) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+
+  grid.innerHTML = filtered.map(l => {
+    const areas = getAreas(l.deals);
+    const prices = getPriceRange(l.deals);
+    const dealCnts = ["매매","전세","월세"].map(t => {
+      const cnt = l.deals.filter(d=>d.type===t).length;
+      return cnt ? `<span class="deal-cnt" style="color:${DEAL_COLORS[t]}">${t} ${cnt}건</span>` : "";
+    }).join("");
+    return `
+    <div class="card" onclick="showDetail(${l.id})">
+      <div class="card-top">
+        <div>
+          <div class="card-name">${l.name}</div>
+          <div class="card-addr">📍 ${l.address}</div>
+        </div>
+        <span class="card-icon">${l.img}</span>
+      </div>
+      <div class="area-tags">
+        ${areas.map(a=>`<span class="area-tag">${a}</span>`).join("")}
+      </div>
+      <div class="price-row">
+        ${prices.map(p=>`
+          <div class="price-item">
+            <span class="price-type" style="color:${DEAL_COLORS[p.type]}">${p.type}</span>
+            <span style="color:#374151">${p.label}</span>
+          </div>`).join("")}
+      </div>
+      <div class="card-bottom">
+        ${dealCnts}
+        <span class="more-btn">상세보기 →</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function showDetail(id) {
+  const l = LISTINGS.find(x=>x.id===id);
+  document.getElementById("list-page").style.display = "none";
+  const dp = document.getElementById("detail-page");
+  dp.style.display = "block";
+
+  const ph = l.priceHistory;
+  const vals = ph.map(d=>d.price);
+  const rising = vals[vals.length-1] >= vals[0];
+  const diff = vals[vals.length-1] - vals[0];
+  const diffPct = ((diff/vals[0])*100).toFixed(1);
+  const latest = vals[vals.length-1];
+
+  currentDetailPhotos = l.photos;
+  currentPhotoIdx = 0;
+
+  dp.innerHTML = `
+    <button class="back-btn" onclick="showList()">← 목록으로</button>
+    <div class="detail-card">
+      <div class="gallery" id="gallery" style="background:${GALLERY_COLORS[0]}">
+        <span style="font-size:40px">${l.photos[0].split(" ")[0]}</span>
+        <span>${l.photos[0].split(" ").slice(1).join(" ")}</span>
+      </div>
+      <div class="thumb-row" style="margin-bottom:1rem">
+        ${l.photos.map((p,i)=>`<button class="thumb ${i===0?'active':''}" id="thumb-${i}" onclick="setPhoto(${i})">${p.split(" ")[0]}</button>`).join("")}
+      </div>
+      <div class="detail-info">
+        <div class="detail-head">
+          <div>
+            <span style="font-size:11px;background:${DEAL_BG[l.tag]};color:${DEAL_COLORS[l.tag]};border:1px solid ${DEAL_BORDER[l.tag]};border-radius:4px;padding:2px 8px;font-weight:500">${l.tag}</span>
+            <div class="detail-name">${l.name}</div>
+            <div class="detail-addr">📍 ${l.address}</div>
+          </div>
+          <div>
+            <div class="detail-price-label">${l.priceType}</div>
+            <div class="detail-price-val">${l.price}만원</div>
+          </div>
+        </div>
+        <p class="detail-desc">${l.desc}</p>
+        <div class="meta-row">
+          ${[["면적",l.area],["층",l.floor],["세대수",`${l.units}세대`],["준공",`${l.built}년`]].map(([k,v])=>`
+            <div class="meta-item"><p>${k}</p><p>${v}</p></div>`).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-head">
+        <span class="chart-title">단지 시세 (매매 기준)</span>
+        <span class="chart-diff" style="color:${rising?'#15803D':'#DC2626'}">${rising?'▲':'▼'} ${Math.abs(diff/10000).toFixed(1)}억 (${diffPct}%)</span>
+      </div>
+      ${renderChart(l.priceHistory)}
+      <div class="chart-stats">
+        ${[["최저",`${(Math.min(...vals)/10000).toFixed(1)}억`],["최고",`${(Math.max(...vals)/10000).toFixed(1)}억`],["최근",`${(latest/10000).toFixed(1)}억`]].map(([k,v])=>`
+          <div class="chart-stat"><p>${k}</p><p>${v}</p></div>`).join("")}
+      </div>
+    </div>
+
+    <div class="deals-box">
+      <div class="deals-title">실제 매물</div>
+      <div class="tab-row" id="deal-tabs">
+        ${["전체","매매","전세","월세"].map(t=>`<button class="tab-btn ${t==='전체'?'active':''}" onclick="setDealTab('${t}',${l.id})">${t}</button>`).join("")}
+      </div>
+      <div class="deal-list" id="deal-list">
+        ${renderDeals(l.deals, "전체")}
+      </div>
+    </div>`;
+}
+
+function setPhoto(i) {
+  currentPhotoIdx = i;
+  const l = LISTINGS.find(x => x.photos === currentDetailPhotos) ||
+    LISTINGS.find(x => x.photos.every((p,j) => p === currentDetailPhotos[j]));
+  const p = currentDetailPhotos[i];
+  const gallery = document.getElementById("gallery");
+  gallery.style.background = GALLERY_COLORS[i % GALLERY_COLORS.length];
+  gallery.innerHTML = `<span style="font-size:40px">${p.split(" ")[0]}</span><span>${p.split(" ").slice(1).join(" ")}</span>`;
+  document.querySelectorAll(".thumb").forEach((el,j) => {
+    el.classList.toggle("active", j === i);
+  });
+}
+
+function renderChart(data) {
+  const vals = data.map(d=>d.price);
+  const min = Math.min(...vals)-500, max = Math.max(...vals)+500, range = max-min;
+  const W=520, H=140, pL=70, pR=20, pT=10, pB=32;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const pts = data.map((d,i)=>({
+    x: pL+(i/(data.length-1))*cW,
+    y: pT+cH-((d.price-min)/range)*cH, d
+  }));
+  const pathD = pts.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(" ");
+  const areaD = pathD+` L${pts[pts.length-1].x},${pT+cH} L${pts[0].x},${pT+cH} Z`;
+  const grids = [0,0.25,0.5,0.75,1].map(t=>({price:min+t*range, y:pT+cH-t*cH}));
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+    <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.01"/>
+    </linearGradient></defs>
+    ${grids.map(g=>`<line x1="${pL}" y1="${g.y}" x2="${W-pR}" y2="${g.y}" stroke="#e5e7eb" stroke-width="0.5"/>
+      <text x="${pL-6}" y="${g.y+4}" text-anchor="end" font-size="10" fill="#9ca3af">${(g.price/10000).toFixed(1)}억</text>`).join("")}
+    <path d="${areaD}" fill="url(#ag)"/>
+    <path d="${pathD}" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="#3B82F6"/>`).join("")}
+    ${data.map((d,i)=>{
+      const x=pL+(i/(data.length-1))*cW;
+      return `<text x="${x}" y="${H-8}" text-anchor="middle" font-size="9" fill="#9ca3af">${d.month}</text>`;
+    }).join("")}
+  </svg>`;
+}
+
+function renderDeals(deals, tab) {
+  const filtered = tab === "전체" ? deals : deals.filter(d=>d.type===tab);
+  return filtered.map(d=>`
+    <div class="deal-row">
+      <div class="deal-left">
+        <span class="deal-tag" style="background:${DEAL_BG[d.type]};color:${DEAL_COLORS[d.type]};border:1px solid ${DEAL_BORDER[d.type]}">${d.type}</span>
+        <span class="deal-size">${d.size} · ${d.floor}</span>
+      </div>
+      <div>
+        <div class="deal-price">${d.price}</div>
+        <div class="deal-date">${d.date}</div>
+      </div>
+    </div>`).join("");
+}
+
+function setDealTab(tab, id) {
+  const l = LISTINGS.find(x=>x.id===id);
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.textContent===tab));
+  document.getElementById("deal-list").innerHTML = renderDeals(l.deals, tab);
+}
+
+function showList() {
+  document.getElementById("detail-page").style.display = "none";
+  document.getElementById("list-page").style.display = "block";
+}
+
+renderFilters();
+renderList();
+</script>
+</body>
+</html>
